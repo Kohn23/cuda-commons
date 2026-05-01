@@ -1,2 +1,4 @@
 # For the purpose of this repo tests should be ignored 
 tests/
+build/
+

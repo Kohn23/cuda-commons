@@ -138,9 +138,8 @@ void generate_random_orthogonal_matrix(
     curandSetPseudoRandomGeneratorSeed(curandGen, seed);
     
     // Generate random Gaussian matrix (rows x cols)
-    generateNormalMatrix(curandGen, thrust::device_vector<double>(d_Q, d_Q + rows * cols), rows, cols);
-
-    fprint_device_matrix("build/gen_Q_normal.txt", rows, cols, d_Q, rows);
+    //generateNormalMatrix(curandGen, thrust::device_vector<double>(d_Q, d_Q + rows * cols), rows, cols);
+    curandGenerateNormalDouble(curandGen, d_Q, (size_t)rows * (size_t)cols, 0.0, 1.0);
 
     // Compute QR decomposition
     int lwork_geqrf = 0, lwork_orgqr = 0;
@@ -159,6 +158,9 @@ void generate_random_orthogonal_matrix(
     cusolverDnDorgqr(cusolverHandle, rows, cols, cols, d_Q, rows,
                      tau.data().get(), work.data().get(), lwork,
                      devInfo.data().get());
+    
+    // debug
+    fprint_device_array2d("build/orthogonal_matrix.txt", d_Q, rows, rows, cols);
 }
 
 
@@ -192,8 +194,6 @@ thrust::device_vector<double> generate_low_rank_matrix(
     generate_random_orthogonal_matrix(d_Q2.data().get(), n, rank,
                                        cusolverHandle, curandGen, seed2);
 
-
-    fprint_device_matrix("build/gen_Q1.txt", m, rank, d_Q1.data().get(), m);
     
     // Copy singular values to device
     thrust::device_vector<double> d_S = s_values;
@@ -222,6 +222,9 @@ thrust::device_vector<double> generate_low_rank_matrix(
                 d_Q2.data().get(), n,
                 &zero,
                 d_A.data().get(), m);
+
+    // debug
+    fprint_device_array2d("build/low_rank_matrix.txt", d_A.data().get(), m, m, n);
     
     return d_A;
 }
